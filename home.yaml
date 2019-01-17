@@ -1,0 +1,27 @@
+devices:
+    lights:
+        states:
+        - "on"
+        - "off"
+        default: "off"
+        commands:
+            "włącz światła": "on"
+            "wyłącz światła": "off"
+    blinds:
+        states:
+        - shut
+        - open
+        default: shut
+        commands:
+            "zasuń rolety": shut
+            "rozsuń rolety": open
+
+
+rooms:
+    livingroom:
+        devices:
+        - lights
+        - blinds
+    kitchen:
+        devices:
+        - lights

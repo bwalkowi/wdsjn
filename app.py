@@ -1,6 +1,8 @@
 import os
 from functools import partial
 
+import yaml
+
 import grpc
 import vlviapb_pb2 as vl
 import vlviapb_pb2_grpc as vl_grpc
@@ -17,6 +19,7 @@ from prompt_toolkit.widgets import Button, Box, TextArea, Label, Frame
 from prompt_toolkit.eventloop import ensure_future, From
 
 from view_utils import show_dialog, ChoiceDialog, MessageDialog
+from home import Home
 
 
 LOGO = r"""
@@ -56,7 +59,7 @@ def recognize(voice_lab, vl_metadata, audio_data):
     return text
 
 
-def listen_handler(vl_stub, vl_metadata, mic, recognizer, text_area):
+def listen_handler(vl_stub, vl_metadata, mic, recognizer, home, text_area):
 
     def handler():
 
@@ -79,11 +82,11 @@ def listen_handler(vl_stub, vl_metadata, mic, recognizer, text_area):
     return handler
 
 
-def create_app(listen_handler):
+def create_app(listen_handler, home):
 
     # components
     logo = Label(text=LOGO)
-    text_area = TextArea(text='', read_only=True, scrollbar=True)
+    text_area = TextArea(text=str(home), read_only=True, scrollbar=True)
 
     listen_btn = Button('Listen', handler=listen_handler(text_area=text_area))
     help_btn = Button('Help', handler=help_handler)
@@ -138,8 +141,11 @@ def main():
         ('contenttype', 'audio/L16;rate=16000')
     ]
 
+    with open('./home.yaml') as f:
+        home = Home(yaml.load(f))
+
     app = create_app(partial(listen_handler, vl_stub, vl_metadata, 
-                             sr.Microphone(), sr.Recognizer()))
+                             sr.Microphone(), sr.Recognizer(), home), home)
     app.run()
 
 
