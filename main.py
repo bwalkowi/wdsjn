@@ -19,8 +19,7 @@ import home_assistant.vlviapb_pb2 as vl
 import home_assistant.vlviapb_pb2_grpc as vl_grpc
 from home_assistant.view_utils import (show_dialog, ChoiceDialog, 
                                        MessageDialog, ListeningDialog)
-from utils import levenshtein_dist
-from home import Home
+from home_assistant.home import Home
 
 
 LOGO = r"""
@@ -62,27 +61,6 @@ def recognize(voice_lab, vl_metadata, audio_data):
     return [word for word in text if len(word) > 2]
 
 
-COMMANDS = [
-    ['włącz', 'światła', 'w salonie'],
-    ['wyłącz', 'światła', 'w salonie'],
-]
-
-def match_command(tokens):
-    possible_commands = []
-    for cmd in COMMANDS:
-        if len(cmd) == len(tokens):
-            total_dist = 0
-            for token1, token2 in zip(cmd, tokens):
-                dist = levenshtein_dist(token1, token2)
-                if dist > 3:
-                    break
-                total_dist += dist
-            else:
-                possible_commands.append((total_dist, cmd))
-    possible_commands.sort(key=lambda x: x[0])
-    return possible_commands
-
-
 def listen_handler(vl_stub, vl_metadata, mic, recognizer, home, text_area):
 
     def handler():
@@ -91,7 +69,8 @@ def listen_handler(vl_stub, vl_metadata, mic, recognizer, home, text_area):
             listening_dialog = ListeningDialog(mic, recognizer)
             audio = yield From(show_dialog(listening_dialog))
             tokens = recognize(vl_stub, vl_metadata, audio)
-            possible_commands = match_command(tokens)
+
+            possible_commands = home.match_command(tokens)
 
             text_area.text = ' '.join(tokens)
             text_area.text = str(home)
@@ -101,15 +80,16 @@ def listen_handler(vl_stub, vl_metadata, mic, recognizer, home, text_area):
                 err_msg_dialog = MessageDialog(err_msg, 'Error')
                 yield From(show_dialog(err_msg_dialog))
             elif len(possible_commands) == 1:
-                [(_, cmd)] = possible_commands
-                text_area.text = ' '.join(cmd)
+                [(_, _, action)] = possible_commands
+                action()
             else:
-                choice_dialog = ChoiceDialog([' '.join(cmd) 
-                                              for _, cmd in possible_commands[:3]])
+                choice_dialog = ChoiceDialog([cmd for _, cmd, _ in possible_commands[:3]])
                 choice = yield From(show_dialog(choice_dialog))
                 if choice is not None:
-                    _, cmd = possible_commands[choice]
-                    text_area.text = str(cmd)
+                    _, _, action = possible_commands[choice]
+                    action()
+
+            text_area.text = str(home)
 
         ensure_future(coroutine())
 

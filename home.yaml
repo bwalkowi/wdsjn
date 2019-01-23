@@ -18,10 +18,10 @@ devices:
 
 
 rooms:
-    livingroom:
+    salon:
         devices:
         - lights
         - blinds
-    kitchen:
+    kuchnia:
         devices:
         - lights
