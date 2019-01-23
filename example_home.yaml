@@ -6,7 +6,10 @@ devices:
         default: "off"
         commands:
             "włącz światła": "on"
+            "zaświeć światła": "on"
+            "zapal światła": "on"
             "wyłącz światła": "off"
+            "zgaś światła": "off"
     blinds:
         states:
         - shut
@@ -14,7 +17,10 @@ devices:
         default: shut
         commands:
             "zasuń rolety": shut
+            "opuść rolety": shut
             "rozsuń rolety": open
+            "odsłoń rolety": open
+            "podnieś rolety": open
 
 
 rooms:

@@ -79,7 +79,7 @@ def listen_handler(vl_stub, vl_metadata, mic, recognizer, home, text_area):
                 err_msg = 'Unrecognized command: {}'.format(' '.join(tokens))
                 err_msg_dialog = MessageDialog(err_msg, 'Error')
                 yield From(show_dialog(err_msg_dialog))
-            elif len(possible_commands) == 1:
+            elif len(possible_commands) == 1 and possible_commands[0][0] == 0:
                 [(_, _, action)] = possible_commands
                 action()
             else:
@@ -155,7 +155,7 @@ def main():
         ('contenttype', 'audio/L16;rate=16000')
     ]
 
-    with open('./home.yaml') as f:
+    with open('./example_home.yaml') as f:
         home = Home(yaml.load(f))
 
     app = create_app(partial(listen_handler, vl_stub, vl_metadata, 
