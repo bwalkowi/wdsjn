@@ -65,7 +65,7 @@ class ListeningDialog:
 
         self.dialog = Dialog(title='LISTENING',
                              body=HSplit([
-                                 TextArea(text='Please speak the command',
+                                 TextArea(text='',
                                           multiline=False, 
                                           read_only=True),
                              ]),
