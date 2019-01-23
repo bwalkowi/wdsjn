@@ -1,8 +1,9 @@
+from prompt_toolkit.eventloop import run_in_executor
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.eventloop import Future, Return
 from prompt_toolkit.layout.dimension import D
 from prompt_toolkit.layout.containers import Float, HSplit
-from prompt_toolkit.widgets import Button, Label, Dialog
+from prompt_toolkit.widgets import Button, Label, Dialog, TextArea
 
 
 class ChoiceDialog:
@@ -43,6 +44,31 @@ class MessageDialog:
                                  Label(text=text),
                              ]),
                              buttons=[ok_btn],
+                             width=D(preferred=80),
+                             modal=True)
+
+    def __pt_container__(self):
+        return self.dialog
+
+
+class ListeningDialog:
+    def __init__(self, mic, recognizer):
+        self.future = future = Future()
+
+        def listen():
+            with mic as source:
+                recognizer.adjust_for_ambient_noise(source, 0.5)
+                audio = recognizer.listen(source)
+            future.set_result(audio)
+
+        run_in_executor(listen)
+
+        self.dialog = Dialog(title='LISTENING',
+                             body=HSplit([
+                                 TextArea(text='Please speak the command',
+                                          multiline=False, 
+                                          read_only=True),
+                             ]),
                              width=D(preferred=80),
                              modal=True)
 

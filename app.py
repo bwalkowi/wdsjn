@@ -18,7 +18,7 @@ from prompt_toolkit.styles import Style
 from prompt_toolkit.widgets import Button, Box, TextArea, Label, Frame
 from prompt_toolkit.eventloop import ensure_future, From
 
-from view_utils import show_dialog, ChoiceDialog, MessageDialog
+from view_utils import show_dialog, ChoiceDialog, MessageDialog, ListeningDialog
 from home import Home
 
 
@@ -33,10 +33,11 @@ LOGO = r"""
                                                                                                                 ====
 """
 
-HELP = "Welcome to HOME ASSISTANT"
+HELP = "Welcome to HOME ASSISTANT deluxe edition"
 
 
 def help_handler():
+
     def coroutine():
         dialog = MessageDialog(HELP, 'HELP')
         yield From(show_dialog(dialog))
@@ -59,25 +60,37 @@ def recognize(voice_lab, vl_metadata, audio_data):
     return text
 
 
+def match_command(_):
+    return None
+
+
 def listen_handler(vl_stub, vl_metadata, mic, recognizer, home, text_area):
 
     def handler():
 
-        with mic as source:
-            recognizer.adjust_for_ambient_noise(source)
+        def coroutine():
+            dialog = ListeningDialog(mic, recognizer)
+            audio = yield From(show_dialog(dialog))
+            tokens = recognize(vl_stub, vl_metadata, audio)
+            possible_commands = match_command(tokens)
+            text_area.text = ' '.join(tokens)
 
-            #print('LISTEN')
-            audio = recognizer.listen(source)
-            #print('TRANSLATE')
-            text = recognize(vl_stub, vl_metadata, audio)
-            text_area.text = ' '.join(text)
+            if possible_commands is None:
+                text_area.text = str(home)
+                err_msg = 'Unrecognized command: {}'.format(' '.join(tokens))
+                err_msg_dialog = MessageDialog(err_msg, 'Error')
+                yield From(show_dialog(err_msg_dialog))
+            elif len(possible_commands) == 1:
+                [(_, cmd)] = possible_commands
+                text_area.text = ' '.join(cmd)
+            else:
+                text_area.text = str(home)
+                choice_dialog = ChoiceDialog([' '.join(cmd) 
+                                              for _, cmd in possible_commands])
+                choice = yield From(show_dialog(choice_dialog))
+                text_area.text = str(choice)
 
-        #def coroutine():
-            #dialog = ChoiceDialog(['zxc', 'asd'], 'qwe')
-            #choice = yield From(show_dialog(dialog))
-            #text_area.text = str(choice)
-
-        #ensure_future(coroutine())
+        ensure_future(coroutine())
 
     return handler
 
@@ -130,7 +143,7 @@ def main():
     password = os.environ.get('VL_PASSWD')
     if not password:
         print('Missing password required to connect to Voice Lab service.\n'
-              'Please provider by setting environment variable "VOICE_LAB_PASSWORD"')
+              'Please provider by setting environment variable "VL_PASSWD"')
         exit(1)
 
     channel = grpc.insecure_channel('demo.voicelab.pl:7722')
@@ -146,6 +159,7 @@ def main():
 
     app = create_app(partial(listen_handler, vl_stub, vl_metadata, 
                              sr.Microphone(), sr.Recognizer(), home), home)
+    #app = create_app(partial(listen_handler, 0, 0, 0, 0, home), home)
     app.run()
 
 
