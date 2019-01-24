@@ -22,7 +22,6 @@ devices:
             "odsłoń rolety": open
             "podnieś rolety": open
 
-
 rooms:
     salon:
         devices:

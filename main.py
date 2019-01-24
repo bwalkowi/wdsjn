@@ -155,7 +155,7 @@ def main():
         ('contenttype', 'audio/L16;rate=16000')
     ]
 
-    with open('./example_home.yaml') as f:
+    with open('./home.yaml') as f:
         home = Home(yaml.load(f))
 
     app = create_app(partial(listen_handler, vl_stub, vl_metadata, 
