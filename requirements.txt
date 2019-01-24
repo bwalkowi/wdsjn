@@ -1,0 +1,7 @@
+grpcio==1.18.0
+grpcio-tools==1.18.0
+prompt-toolkit==2.0.7
+protobuf==3.6.1
+PyAudio==0.2.11
+PyYAML==3.13
+SpeechRecognition==3.8.1
